@@ -19,6 +19,7 @@ const VerifiableCredentialsForm: React.FC<VerifiableCredentialsFormProps> = ({ o
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
         setIsLoading(true);
+        //trying
 
 
         const credentials = { customerName: name, countryCode, customerDID: customerDid?.uri };
