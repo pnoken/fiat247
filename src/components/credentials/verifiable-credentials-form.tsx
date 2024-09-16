@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '@/hooks/use-app-dispatch';
 import { setUserCredentials } from '@/lib/wallet-slice';
 import { fetchCredentialToken } from '@/utils/request/fetch-credential-token';
 import { toast } from 'react-hot-toast';
+import { useLocalStorage } from '@/hooks/use-local-storage';
 
 interface VerifiableCredentialsFormProps {
     onComplete: () => void;
@@ -13,14 +14,14 @@ const VerifiableCredentialsForm: React.FC<VerifiableCredentialsFormProps> = ({ o
     const [name, setName] = useState('');
     const [countryCode, setCountryCode] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const { customerDid } = useAppSelector((state) => state.wallet);
+    const [customerDid,] = useLocalStorage("customerDid", null);
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
         setIsLoading(true);
 
 
-        const credentials = { customerName: name, countryCode, customerDID: customerDid.uri };
+        const credentials = { customerName: name, countryCode, customerDID: customerDid?.uri };
 
         try {
             const token = await fetchCredentialToken(credentials);
