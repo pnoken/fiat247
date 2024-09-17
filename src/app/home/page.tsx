@@ -3,13 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/dashboard/sidebar';
 import Portfolio from '@/components/dashboard/content/portfolio';
-import Earnings from '@/components/dashboard/content/earning';
 import Exchange from '@/components/dashboard/content/exchange';
 import MobileSidebar from '@/components/dashboard/mobile-sidebar';
-import { withWalletLock } from '@/hocs/wallet-lock';
 import { TransactionList } from '@/components/dashboard/content/transactions';
 
-const Dashboard: React.FC = () => {
+const Home: React.FC = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
     const [activeComponent, setActiveComponent] = useState<string>('Portfolio');
     const [isMobile, setIsMobile] = useState<boolean>(false);
@@ -69,4 +67,4 @@ const Dashboard: React.FC = () => {
     );
 };
 
-export default Dashboard;
+export default Home;

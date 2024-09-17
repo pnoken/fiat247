@@ -1,8 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { TbdexHttpClient, Rfq, Exchange, Close, Order } from '@tbdex/http-client';
-import { PresentationExchange } from '@web5/credentials';
+import { Exchange } from '@tbdex/http-client';
 import { RootState } from './store';
-import { formatMessages } from '@/utils/helper/format-messages';
+import { formatMessages } from '@/utils/helpers/format-msg';
 
 interface ExchangeState {
     isCreating: boolean;
@@ -20,17 +19,6 @@ const initialState: ExchangeState = {
     exchanges: [],
 };
 
-// Helper function to serialize Exchange objects
-const serializeExchange = (exchange: Exchange[]) => {
-    return exchange.map(message => ({
-        ...message,
-        kind: message.kind,
-        data: JSON.parse(JSON.stringify(message.data)),
-        privateData: message.privateData ? JSON.parse(JSON.stringify(message.privateData)) : null,
-        validNext: message.validNext ? Array.from(message.validNext) : null, // Convert Set to Array
-    }));
-};
-
 // Async thunk to create an exchange
 export const createExchange = createAsyncThunk<any, {
     offering: any;
@@ -42,6 +30,8 @@ export const createExchange = createAsyncThunk<any, {
     async ({ offering, amount, payinPaymentDetails, payoutPaymentDetails }, thunkAPI) => {
         const state = thunkAPI.getState() as RootState;
         const { customerCredentials, customerDid } = state.wallet;
+        const { PresentationExchange } = await import('@web5/credentials');
+        const { TbdexHttpClient, Rfq } = await import('@tbdex/http-client');
         try {
             // Select credentials required for the exchange
             const selectedCredentials = PresentationExchange.selectCredentials({
@@ -54,7 +44,7 @@ export const createExchange = createAsyncThunk<any, {
             // Create RFQ (Request for Quote)
             const rfq = Rfq.create({
                 metadata: {
-                    from: customerDid.uri,
+                    from: signedCustomerDid.uri,
                     to: offering.metadata.from,
                     protocol: '1.0',
                 },
@@ -63,9 +53,7 @@ export const createExchange = createAsyncThunk<any, {
                     payin: {
                         amount: amount,
                         kind: offering.data.payin.methods[0].kind,
-                        paymentDetails: {
-
-                        }, // Ensure this is an empty object, not null
+                        paymentDetails: payinPaymentDetails,
                     },
                     payout: {
                         kind: offering.data.payout.methods[0].kind,
@@ -100,9 +88,10 @@ export const createExchange = createAsyncThunk<any, {
 );
 
 // Updated async thunk for fetching exchanges
-export const fetchExchanges = createAsyncThunk<any, string, { state: RootState }>(
+export const fetchExchanges = createAsyncThunk<Exchange[], string, { state: RootState }>(
     'exchange/fetchExchanges',
     async (pfiUri, { getState }) => {
+        const { TbdexHttpClient } = await import('@tbdex/http-client');
         const state = getState();
         const { DidDht } = await import('@web5/dids');
         const signedCustomerDid = await DidDht.import({ portableDid: state.wallet.customerDid });
@@ -110,10 +99,7 @@ export const fetchExchanges = createAsyncThunk<any, string, { state: RootState }
             pfiDid: pfiUri,
             did: signedCustomerDid
         });
-        // Serialize exchanges before returning
-        const serializedExchanges = exchanges.map(serializeExchange);
-        //console.log("exchanges", formatMessages(serializedExchanges));
-        return formatMessages(serializedExchanges);
+        return formatMessages(exchanges);
     }
 );
 
@@ -125,6 +111,7 @@ export const closeExchange = createAsyncThunk<any, {
 }, { state: RootState }>(
     'exchange/close',
     async ({ exchangeId, pfiUri, reason }, { getState }) => {
+        const { TbdexHttpClient, Close } = await import('@tbdex/http-client');
         const state = getState();
         const { DidDht } = await import('@web5/dids');
         const signedCustomerDid = await DidDht.import({ portableDid: state.wallet.customerDid });
@@ -157,6 +144,7 @@ export const placeOrder = createAsyncThunk<any, {
 }, { state: RootState }>(
     'exchange/placeOrder',
     async ({ exchangeId, pfiUri }, { getState }) => {
+        const { TbdexHttpClient, Order } = await import('@tbdex/http-client');
         const state = getState();
         const { DidDht } = await import('@web5/dids');
         const signedCustomerDid = await DidDht.import({ portableDid: state.wallet.customerDid });

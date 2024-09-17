@@ -26,6 +26,11 @@ const ConfirmPasswordForm: React.FC = () => {
 
     const handlePasswordChange = (e: ChangeEvent<HTMLInputElement>) => {
         setPassword(e.target.value);
+        if (e.target.value !== confirmPassword) {
+            setPasswordError("Passwords do not match");
+        } else {
+            setPasswordError("");
+        }
     };
 
     useEffect(() => {
@@ -58,7 +63,7 @@ const ConfirmPasswordForm: React.FC = () => {
         }
     };
 
-    const handleSubmit = async (e: FormEvent<HTMLInputElement>) => {
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (password.length < 8) {
             setPasswordError('Password must be at least 8 characters long');
@@ -198,7 +203,7 @@ const ConfirmPasswordForm: React.FC = () => {
                                     className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                                 />
                                 <label htmlFor="understoodPassword" className="ml-2 block text-sm text-gray-900">
-                                    I understand that Fiatsend can't recover the password.{' '}
+                                    I understand that Fiatsend cannot recover the password.
                                     <a href="#" className="text-indigo-600 hover:text-indigo-500 inline-flex items-center">
                                         Learn more
                                         <InformationCircleIcon className="h-4 w-4 ml-1" />

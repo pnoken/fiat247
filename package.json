@@ -1,6 +1,6 @@
 {
   "name": "web-wallet",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -19,8 +19,11 @@
     "@web5/api": "^0.10.0",
     "@web5/credentials": "1.0.3",
     "@web5/crypto": "1.0.1",
-    "@web5/crypto-aws-kms": "1.0.1",
+    "@web5/crypto-aws-kms": "^1.0.0",
     "@web5/dids": "1.1.2",
+    "assert": "^2.1.0",
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.0",
     "crypto-js": "^4.2.0",
     "cypress": "^13.14.2",
     "did-jwt-vc": "^4.0.4",
@@ -37,6 +40,7 @@
     "react-hot-toast": "^2.4.1",
     "react-icons": "^5.3.0",
     "react-redux": "^9.1.2",
+    "stream-browserify": "^3.0.0",
     "ts-custom-error": "^3.3.1"
   },
   "devDependencies": {

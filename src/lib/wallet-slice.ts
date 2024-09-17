@@ -4,8 +4,6 @@ import { VerifiableCredential } from '@web5/credentials';
 import { RootState } from './store';
 import { isClient } from '@/utils/isClient';
 import { storeCredential, getStoredCredential } from '@/utils/secure-storage';
-import { verifyVC } from '@/utils/credentials-verifier';
-import { AppDispatch } from './store';
 
 // Define the structure for a token balance
 interface TokenBalance {
@@ -41,7 +39,6 @@ interface WalletState {
 }
 
 const storedDid = isClient ? localStorage.getItem('customerDid') : null;
-const storedCredentials = getStoredCredential();
 const STORAGE_KEY = 'wallet_balances';
 
 const initialTokenBalances: TokenBalance[] = [
@@ -168,11 +165,9 @@ export const initializeWallet = createAsyncThunk(
     async (_, thunkAPI) => {
         const storedDid = localStorage.getItem('customerDid');
         if (storedDid) {
-            const { DidDht } = await import('@web5/dids');
             try {
-                const customerDid = await DidDht.import({ portableDid: JSON.parse(storedDid) });
-                if (customerDid) {
-                    return customerDid
+                if (storedDid) {
+                    return storedDid
                 }
             } catch (error) {
                 console.error('Failed to find stored DID:', error);
@@ -198,11 +193,11 @@ const walletSlice = createSlice({
         },
         clearCredentials: (state) => {
             state.customerCredentials = [];
-            storeCredential(null);
+            storeCredential([]);
         },
         setCredentials: (state, action: PayloadAction<VerifiableCredential>) => {
             state.customerCredentials = [action.payload];
-            storeCredential(action.payload);
+            storeCredential([action.payload]);
         },
         verifyCredential: (state, action: PayloadAction<{ issuer: string }>) => {
             const credential = state.customerCredentials.find(vc => vc.issuer === action.payload.issuer);
@@ -292,7 +287,6 @@ const walletSlice = createSlice({
             .addCase(initializeWallet.fulfilled, (state, action) => {
                 if (action.payload) {
                     state.customerDid = action.payload,
-                        state.did = action.payload.uri,
                         state.walletCreated = true;
                 }
             })

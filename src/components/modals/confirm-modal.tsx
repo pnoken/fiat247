@@ -23,7 +23,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, 
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
                 <h2 className="text-xl font-bold mb-4">Keep Your Did Safe</h2>
-                <p className="mb-4">Tap on all checkboxes to confirm you understand the importance of your seed phrase:</p>
+                <p className="mb-4">Tap on all checkboxes to confirm you understand the importance of your portable DID:</p>
                 <div className="space-y-2 mb-6">
                     {[
                         "Fiatsend doesn't keep any copy of your DID and other backup methods such as JSON file or private key.",

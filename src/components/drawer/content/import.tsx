@@ -36,6 +36,7 @@ const DrawerContent: React.FC<DrawerContentProps> = ({ onClose }) => {
                 <div className="mt-8 space-y-4">
                     <motion.button
                         whileHover={{ scale: 1.05 }}
+                        disabled
                         whileTap={{ scale: 0.95 }}
                         className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                         onClick={() => handleImport('privateKey')}

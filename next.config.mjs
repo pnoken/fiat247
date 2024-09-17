@@ -11,6 +11,7 @@ const nextConfig = {
                 stream: 'stream-browserify',
                 crypto: 'crypto-browserify',
                 buffer: 'buffer',
+                fs: false,
             };
 
             config.plugins.push(

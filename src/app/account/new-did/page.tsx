@@ -9,7 +9,6 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useAppDispatch, useAppSelector } from '@/hooks/use-app-dispatch';
 import { createNewWallet } from '@/lib/wallet-slice';
-import { useLocalStorage } from '@/hooks/use-local-storage';
 
 const NewSeedPhrase: React.FC = () => {
     const { customerDid } = useAppSelector((state) => state.wallet);
@@ -35,7 +34,7 @@ const NewSeedPhrase: React.FC = () => {
 
     useEffect(() => {
         recreateDidAfterRefresh()
-    }, [])
+    }, [recreateDidAfterRefresh])
 
     const createDownloadLink = () => {
         if (!customerDid) return null;

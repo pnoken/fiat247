@@ -39,7 +39,7 @@ export const withWalletLock = (WrappedComponent: React.ComponentType) => {
                 window.removeEventListener('mousemove', activityHandler);
                 window.removeEventListener('keypress', activityHandler);
             };
-        }, [dispatch, router]);
+        }, [dispatch, router, lastActivity]);
 
         if (isLocked) {
             router.push('/unlock');

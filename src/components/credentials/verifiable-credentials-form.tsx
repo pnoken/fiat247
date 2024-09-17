@@ -4,9 +4,14 @@ import { setUserCredentials } from '@/lib/wallet-slice';
 import { fetchCredentialToken } from '@/utils/request/fetch-credential-token';
 import { toast } from 'react-hot-toast';
 import { useLocalStorage } from '@/hooks/use-local-storage';
+import { VerifiableCredential } from '@web5/credentials';
 
 interface VerifiableCredentialsFormProps {
     onComplete: () => void;
+}
+
+interface CustomerDid {
+    uri: string;
 }
 
 const VerifiableCredentialsForm: React.FC<VerifiableCredentialsFormProps> = ({ onComplete }) => {
@@ -14,20 +19,22 @@ const VerifiableCredentialsForm: React.FC<VerifiableCredentialsFormProps> = ({ o
     const [name, setName] = useState('');
     const [countryCode, setCountryCode] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [customerDid,] = useLocalStorage("customerDid", null);
+    const [customerDid,] = useLocalStorage<CustomerDid>("customerDid", { uri: "" });
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
         setIsLoading(true);
 
 
-        const credentials = { customerName: name, countryCode, customerDID: customerDid?.uri };
+        const credentials = { customerName: name, countryCode, customerDID: customerDid.uri };
 
         try {
             const token = await fetchCredentialToken(credentials);
-            dispatch(setUserCredentials(token));
-            toast.success('Credentials set successfully!');
-            onComplete();
+            if (token) {
+                dispatch(setUserCredentials(token as unknown as VerifiableCredential));
+                toast.success('Credentials set successfully!');
+                onComplete();
+            }
         } catch (error) {
             console.error('Failed to set credentials:', error);
             toast.error('Failed to set credentials. Please try again.');

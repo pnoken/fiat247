@@ -10,7 +10,6 @@ export const fetchCredentialToken = async ({ customerName, countryCode, customer
             `https://mock-idv.tbddev.org/kcc?name=${customerName}&country=${countryCode}&did=${customerDID}`
         );
         const jwtToken = await response.text(); // Get the JWT token as a string
-        console.log("cred token", jwtToken);
         return jwtToken;
     } catch (error) {
         console.error('Failed to fetch credential token', error);

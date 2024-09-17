@@ -2,6 +2,17 @@ import React from 'react';
 import { RootState } from '@/lib/store';
 import { useAppSelector } from '@/hooks/use-app-dispatch';
 import { FaExchangeAlt } from 'react-icons/fa';
+import { Exchange } from '@tbdex/http-client';
+
+interface ExchangeWithPfiDid extends Exchange {
+    pfiDid: string;
+    id: string;
+    payinCurrency: string;
+    payoutCurrency: string;
+    payinAmount: string;
+    payoutAmount: string;
+    status: string
+}
 
 export const TransactionList: React.FC = () => {
     const { exchanges } = useAppSelector((state: RootState) => state.exchange);
@@ -21,7 +32,7 @@ export const TransactionList: React.FC = () => {
                 ) : (
                     <ul className="divide-y divide-gray-200">
                         {exchanges.map((exchange) => {
-                            const { id, payinAmount, status, payoutAmount, payinCurrency, payoutCurrency } = exchange
+                            const { id, payinAmount, status, payoutAmount, payinCurrency, payoutCurrency } = exchange as ExchangeWithPfiDid;
                             return (
                                 <li key={id} className="p-6 hover:bg-gray-50 transition duration-150 ease-in-out">
                                     <div className="flex justify-between items-center">

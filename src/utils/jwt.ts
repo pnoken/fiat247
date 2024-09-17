@@ -1,5 +1,4 @@
 import { encode, decode } from 'next-auth/jwt';
-import jwt from 'jsonwebtoken'
 
 const JWT_SECRET = 'your_secret_key_here'; // Replace with your actual secret
 

@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { TbdexHttpClient, Offering } from '@tbdex/http-client';
+import { Offering } from '@tbdex/http-client';
 import { mockProviderDids } from '@/constants/mockDids';
 
 // Define the state type
@@ -51,6 +51,7 @@ const serializeOffering = (offering: Offering): SerializedOffering => ({
 export const fetchOfferings = createAsyncThunk<SerializedOffering[], { from: string; to: string }, { rejectValue: string }>(
     'offerings/fetchOfferings',
     async ({ from, to }, thunkAPI) => {
+        const { TbdexHttpClient } = await import('@tbdex/http-client');
         try {
             const allOfferings: Offering[] = [];
             for (const pfi of Object.values(mockProviderDids)) {

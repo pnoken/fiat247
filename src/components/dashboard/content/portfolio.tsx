@@ -4,6 +4,9 @@ import { Tabs } from '@/components/ui/tabs';
 import Image from 'next/image';
 import { useAppSelector } from '@/hooks/use-app-dispatch';
 import { RootState } from '@/lib/store';
+import { renderCredential } from '@/utils/render-cred';
+import { withCredentials } from '@/hocs/with-credentials';
+import { VerifiableCredential } from '@web5/credentials';
 
 interface TabItem {
     label: string;
@@ -101,7 +104,15 @@ const Portfolio: React.FC = () => {
     const shortenedDid = did.length > 10 ? `${did.substring(0, 5)}...${did.substring(did.length - 5)}` : did;
 
     // Use useSelector to get token balances from Redux state
-    const tokenBalances = useAppSelector((state: RootState) => state.wallet.tokenBalances);
+    const { tokenBalances, customerCredentials } = useAppSelector((state: RootState) => state.wallet);
+
+    // for (let i = 0; i < customerCredentials.length; i++) {
+    //     console.log(cred[i]);
+    //     console.log(renderCredential(cred[i]));
+    //     return renderCredential(cred[i]);
+    // }
+
+
 
     const tabsData: TabItem[] = [
         {
@@ -139,17 +150,27 @@ const Portfolio: React.FC = () => {
                 <div className="p-4">
                     <h3 className="text-lg font-semibold mb-4">Verified Credentials</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {verifiedCredentials.map((credential, index) => (
-                            <div key={index} className="bg-gradient-to-br from-blue-500 to-purple-600 p-4 rounded-lg shadow-lg text-white hover:shadow-xl transition-shadow duration-300">
-                                <div className="text-4xl mb-2">{credential.icon}</div>
-                                <h4 className="text-xl font-bold mb-2">{credential.name}</h4>
-                                <p className="text-sm mb-1">Issuer: {credential.issuer}</p>
-                                <p className="text-sm">Issued: {credential.date}</p>
-                                <div className="mt-4 flex justify-between items-center">
-                                    <span className="text-xs bg-white bg-opacity-20 px-2 py-1 rounded">Verified ✓</span>
+
+                        {customerCredentials.length > 0 && customerCredentials.map(async (credential, index) => {
+                            const { title, name, countryCode, issuanceDate } = await renderCredential(credential as VerifiableCredential);
+                            return (
+                                <div key={index} className="bg-gradient-to-br from-blue-500 to-purple-600 p-4 rounded-lg shadow-lg text-white hover:shadow-xl transition-shadow duration-300">
+                                    <div className="text-4xl mb-2">{'🪙'}</div>
+                                    <h4 className="text-xl font-bold mb-2">{title}</h4>
+                                    <p className="text-sm mb-1">Name: {name}</p>
+                                    <p className="text-sm mb-1">Country Code: {countryCode}</p>
+                                    <p className="text-sm">Issued: {issuanceDate}</p>
+                                    <div className="mt-4 flex justify-between items-center">
+                                        <span className="text-xs bg-white bg-opacity-20 px-2 py-1 rounded">Verified ✓</span>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
+
+                        {
+                            customerCredentials.length === 0 && <h4>No issued Credentials</h4>
+                        }
+
                     </div>
                     <h3 className="text-lg font-semibold mb-4 mt-8">Unverified Credentials</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -262,4 +283,4 @@ const Portfolio: React.FC = () => {
     );
 };
 
-export default Portfolio;
+export default withCredentials(Portfolio);

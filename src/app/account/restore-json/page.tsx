@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { loadDID } from '@/utils/load-write-did';
 import { DocumentArrowUpIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { initializeWallet } from '@/lib/wallet-slice';
@@ -15,7 +14,6 @@ const ImportPrivateKey: React.FC = () => {
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files ? event.target.files[0] : null;
         setSelectedFile(file);
-        console.log("file", file);
     };
 
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -52,15 +50,6 @@ const ImportPrivateKey: React.FC = () => {
             try {
                 const content = await readFileContent(selectedFile);
                 localStorage.setItem('customerDid', content);
-
-                loadDID(selectedFile.name);
-                console.log('Selected file:', selectedFile);
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const content = e.target?.result;
-                    console.log('File content:', content);
-                };
-                reader.readAsText(selectedFile);
                 initializeWallet();
                 router.push("/home");
             } catch (error) {

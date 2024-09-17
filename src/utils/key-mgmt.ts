@@ -1,4 +1,3 @@
-import { LocalKeyManager } from "@web5/crypto";
 import { PortableDid as Web5PortableDid } from '@web5/dids';
 let AwsKeyManager: any;
 
@@ -10,6 +9,7 @@ type Environment = 'production' | 'development' | 'test';
 
 
 export async function initKeyManagement(env: Environment, portableDid: Web5PortableDid) {
+    const { LocalKeyManager } = await import('@web5/crypto');
     // Determine which key manager to use based on the environment
     let keyManager;
     if (env === "production") {

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 interface TermsConditionsModalProps {
     isOpen: boolean;
@@ -24,7 +24,7 @@ const TermsConditionsModal: React.FC<TermsConditionsModalProps> = ({ isOpen, onC
         { title: "Changes and amendments", content: "We reserve the right to modify this Agreement or its terms related to the Fiatsend Application and Services at any time at our discretion. When we do, we will revise the updated date at the bottom of this page." },
     ];
 
-    const handleScroll = () => {
+    const handleScroll = useCallback(() => {
         if (contentRef.current) {
             const { scrollTop, scrollHeight, clientHeight } = contentRef.current;
             const scrollableDistance = scrollHeight - clientHeight;
@@ -34,13 +34,13 @@ const TermsConditionsModal: React.FC<TermsConditionsModalProps> = ({ isOpen, onC
             setIsFullyScrolled(currentScrollPercentage > 99);
             setActiveSection(Math.floor((scrollTop / scrollableDistance) * sections.length));
         }
-    };
+    }, [sections.length]);
 
     useEffect(() => {
         if (contentRef.current) {
             handleScroll(); // Initial check
         }
-    }, []);
+    }, [handleScroll]);
 
     const handleAccept = () => {
         localStorage.setItem('termsAccepted', 'true');

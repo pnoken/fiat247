@@ -1,8 +1,6 @@
-import React, { ChangeEventHandler, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { useAppSelector } from '@/hooks/use-app-dispatch';
-import { RootState } from '@/lib/store';
 
 interface SwapInputProps {
     label: string;
@@ -12,6 +10,7 @@ interface SwapInputProps {
     onReset: () => void;
     onChange: (value: string) => void;
     isReadOnly?: boolean;
+    selectedBalance: number;
 }
 
 export const SwapInput: React.FC<SwapInputProps> = ({
@@ -21,16 +20,11 @@ export const SwapInput: React.FC<SwapInputProps> = ({
     onChange,
     value,
     onReset,
+    selectedBalance,
     isReadOnly = false,
 }) => {
     const [displayValue, setDisplayValue] = useState(value);
     const [error, setError] = useState('');
-
-    // Get token balances from Redux store
-    const tokenBalances = useAppSelector((state: RootState) => state.wallet.tokenBalances);
-
-    // Get the balance of the selected currency
-    const selectedBalance = tokenBalances.find(token => token.token === selectValue)?.amount || 0;
 
     useEffect(() => {
         setDisplayValue(formatNumber(value));
@@ -43,15 +37,30 @@ export const SwapInput: React.FC<SwapInputProps> = ({
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const inputValue = e.target.value.replace(/[^0-9.]/g, '');
+        let inputValue = e.target.value.replace(/[^0-9.]/g, '');
         const parts = inputValue.split('.');
         if (parts.length > 2) return; // Prevent multiple decimal points
         if (parts[1] && parts[1].length > 2) return; // Limit to 2 decimal places
 
+        // Prevent multiple decimal points
+        if (parts.length > 2) return;
+
+        // Remove leading zeros before a whole number
+        if (parts[0].length > 1 && parts[0].startsWith('0')) {
+            parts[0] = parts[0].replace(/^0+/, '');
+        }
+
+        inputValue = parts.join('.');
+
+
         const numericValue = parseFloat(inputValue);
         if (numericValue > selectedBalance) {
             setError("You don't have enough funds to complete the transaction.");
-        } else {
+        }
+        if (numericValue === 0) {
+            setError("");
+        }
+        else {
             setError('');
         }
 

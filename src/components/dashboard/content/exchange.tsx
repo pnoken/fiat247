@@ -9,16 +9,17 @@ import { fetchOfferings } from '@/lib/offering-slice';
 import LoadingPulse from '@/components/animate/loading-pulse';
 import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
-//import { Offering as Offering } from '@/types/offering';
 import { Offering } from '@tbdex/http-client';
 import { withCredentials } from '@/hocs/with-credentials';
+import { RootState } from '@/lib/store';
 
 const Exchange: React.FC = () => {
     const dispatch = useAppDispatch();
 
     const [selectedCurrencyPair, setSelectedCurrencyPair] = useState({ from: '', to: '' });
     const [amount, setAmount] = useState('');
-    const { matchedOfferings = [], status = 'idle', error: offeringsError = null } = useAppSelector((state) => state.offering) || {};
+    const { isCreating } = useAppSelector((state: RootState) => state.exchange);
+    const { matchedOfferings = [], status = 'idle', error: offeringsError = null } = useAppSelector((state: RootState) => state.offering) || {};
     const [timeLeft, setTimeLeft] = useState(42000);
 
     useEffect(() => {
@@ -29,7 +30,7 @@ const Exchange: React.FC = () => {
 
     useEffect(() => {
         let timer: NodeJS.Timeout;
-        if (matchedOfferings.length > 0) {
+        if (!isCreating && matchedOfferings.length > 0) {
             setTimeLeft(42000);
             timer = setInterval(() => {
                 setTimeLeft((prevTime) => {
@@ -46,7 +47,7 @@ const Exchange: React.FC = () => {
         return () => {
             if (timer) clearInterval(timer);
         };
-    }, [matchedOfferings, dispatch, selectedCurrencyPair]);
+    }, [matchedOfferings, dispatch, selectedCurrencyPair, status, isCreating]);
 
     const handleCurrencyPairSelect = (from: string, to: string) => {
         setSelectedCurrencyPair({ from, to });
@@ -60,7 +61,7 @@ const Exchange: React.FC = () => {
         if (status === 'idle') return null;
         if (status === 'loading' && Number(amount) > 0) return <LoadingPulse />;
         if (status === 'failed') return <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-red-500 text-center mt-4">Error: {offeringsError}</motion.p>;
-        if (matchedOfferings.length === 0) return <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-yellow-500 text-center mt-4">No offerings available for the selected currency pair.</motion.p>;
+        if (status === 'succeeded' && matchedOfferings.length === 0) return <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-yellow-500 text-center mt-4">No offerings available for the selected currency pair.</motion.p>;
 
         if (Number(amount) > 0)
             return (

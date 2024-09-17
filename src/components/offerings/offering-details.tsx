@@ -1,11 +1,9 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
-import { Offering } from '@tbdex/http-client';
 import Image from 'next/image';
 import { useAppDispatch, useAppSelector } from '@/hooks/use-app-dispatch';
-import VerifiableCredentialsForm from '@/components/credentials/verifiable-credentials-form';
-import { closeExchange, createExchange, fetchExchanges, placeOrder } from '@/lib/exchange-slice';
+import { closeExchange, fetchExchanges, placeOrder } from '@/lib/exchange-slice';
 import { mockProviderDids, pfiAllowList } from '@/constants/mockDids';
 import { RootState } from '@/lib/store';
 import Spinner from '../spinner';
@@ -13,9 +11,20 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import RatingPopup from '../popup/rating';
 import { updateBalanceAfterExchange } from '@/lib/wallet-slice';
+import { Exchange } from '@tbdex/http-client';
 
 interface OfferingDetailsProps {
     onBack: () => void;
+}
+
+interface ExchangeWithPfiDid extends Exchange {
+    pfiDid: string;
+    id: string;
+    payinCurrency: string;
+    payoutCurrency: string;
+    payinAmount: string;
+    payoutAmount: string;
+    to: string;
 }
 
 const OfferingDetails: React.FC<OfferingDetailsProps> = ({
@@ -24,25 +33,24 @@ const OfferingDetails: React.FC<OfferingDetailsProps> = ({
     const dispatch = useAppDispatch();
     const router = useRouter();
     const { exchanges, isFetching, error } = useAppSelector((state: RootState) => state.exchange);
-    const { customerDid } = useAppSelector((state: RootState) => state.wallet);
-    const [hasFetched, setHasFetched] = useState(false);
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+    const [isCancellingOrder, setIsCancellingOrder] = useState(false);
     const [showRatingPopup, setShowRatingPopup] = useState(false);
 
 
-    const mostRecentExchange = exchanges[exchanges.length - 1];
+    const mostRecentExchange = exchanges[exchanges.length - 1] as ExchangeWithPfiDid;
+
+    console.log("most recent quote", mostRecentExchange);
 
     const fetchActiveExchanges = useCallback(async () => {
 
         const pfiUris = Object.values(mockProviderDids).map(pfi => pfi.uri);
         await Promise.all(pfiUris.map(uri => dispatch(fetchExchanges(uri))));
-        setHasFetched(true);
-
-    }, []);
+    }, [dispatch]);
 
     useEffect(() => {
         fetchActiveExchanges();
-    }, []);
+    }, [fetchActiveExchanges]);
 
     if (isFetching) {
         return <Spinner />;
@@ -94,7 +102,7 @@ const OfferingDetails: React.FC<OfferingDetailsProps> = ({
     }
 
     const handleCancel = async () => {
-        setIsPlacingOrder(true);
+        setIsCancellingOrder(true);
         try {
             const order = await dispatch(closeExchange({
                 exchangeId: mostRecentExchange.id,
@@ -110,12 +118,12 @@ const OfferingDetails: React.FC<OfferingDetailsProps> = ({
             console.error('Failed to place order:', error);
             toast.error('Failed to place order. Please try again.');
         } finally {
-            setIsPlacingOrder(false);
+            setIsCancellingOrder(false);
         }
     };
 
 
-    const { id, payinAmount, payoutAmount, payinCurrency, payoutCurrency, pfiDid } = mostRecentExchange;
+    const { to, payinAmount, payoutAmount, payinCurrency, payoutCurrency, pfiDid } = mostRecentExchange;
     const pfiInfo = pfiAllowList.find(pfi => pfi.uri === pfiDid);
     const pfiName = pfiInfo ? pfiInfo.name : 'Unknown Provider';
 
@@ -177,7 +185,22 @@ const OfferingDetails: React.FC<OfferingDetailsProps> = ({
                                         {payoutAmount} {payoutCurrency}
                                     </p>
                                 </div>
+
                             </div>
+
+                        </div>
+                        <div className="md:block hidden justify-between items-center bg-white/10 p-4 rounded-xl">
+
+
+                            <div >
+                                <p className="text-sm text-white/80">Payment Details</p>
+                                <p className="text-2xl font-bold text-white">
+                                    {to}
+                                </p>
+                            </div>
+
+
+
                         </div>
                     </div>
                     <div className="bg-white/10 p-4 rounded-xl mb-8">
@@ -198,10 +221,10 @@ const OfferingDetails: React.FC<OfferingDetailsProps> = ({
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={handleCancel}
-                            disabled={isPlacingOrder}
+                            disabled={isCancellingOrder}
                             className="flex-1 bg-red-400 text-white py-4 px-8 rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
                         >
-                            Cancel
+                            {isCancellingOrder ? 'Cancelling...' : 'Cancel'}
                         </motion.button>
                     </div>
                 </motion.div>

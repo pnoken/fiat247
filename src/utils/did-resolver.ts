@@ -1,6 +1,5 @@
-import { DidDht, DidJwk } from '@web5/dids';
-
 export const resolveDID = async (did: string) => {
+    const { DidDht, DidJwk } = await import('@web5/dids');
     try {
         if (did.startsWith('did:dht:')) {
             const resolvedDid = await DidDht.resolve(did);

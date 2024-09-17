@@ -3,15 +3,10 @@ import { motion } from "framer-motion";
 import { ArrowsUpDownIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import { SwapInput } from "../ui/input/swap-input";
-import { Drawer } from "../ui/drawer/drawer";
 import { useAppDispatch, useAppSelector } from "@/hooks/use-app-dispatch";
-import ActiveExchanges from "../exchanges/active";
-// import { ActiveExchangesList } from "../drawer/content/list-exchanges";
 import { RootState } from "@/lib/store";
-import { getStoredCredential, storeCredential } from '@/utils/secure-storage';
 import { createExchange } from "@/lib/exchange-slice";
 import { Offering } from "@tbdex/http-client";
-import { Modal } from "../ui/modal/popup";
 import OfferingDetails from '../offerings/offering-details';
 import SettingsDrawer from "../ui/drawer/settings";
 import { SettingContent } from "../drawer/content/settings";
@@ -24,22 +19,23 @@ export const SwapSection: React.FC<{
     offering: Offering;
 }> = ({ selectedCurrencyPair, onCurrencyPairSelect, amount, onAmountChange, offering }) => {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const [error, setError] = useState('');
     const [exchangeInfo, setExchangeInfo] = useState(null);
     const [showOfferingDetails, setShowOfferingDetails] = useState(false);
     const tokenBalances = useAppSelector((state: RootState) => state.wallet.tokenBalances);
+    const { status, error: offeringError } = useAppSelector((state: RootState) => state.offering);
     const selectedBalance = tokenBalances.find(token => token.token === selectedCurrencyPair.from)?.amount || 0;
+    //const { matchedOfferings, status, error: offeringError } = useOfferings(selectedCurrencyPair.from, selectedCurrencyPair.to);
 
     const handleReset = () => {
         onAmountChange('');
         onCurrencyPairSelect('GHS', 'USDC');
     };
 
-    const currencies = ["GHS", "USDC", "KES", "NGN"];
-    const { status } = useAppSelector((state: RootState) => state.offering);
-    const { exchange, isCreating } = useAppSelector((state: RootState) => state.exchange);
+    const currencies = ["GHS", "USDC", "KES", "NGN", "USD", "EUR", "GBP"];
+    const filteredFromCurrencies = currencies.filter(currency => currency !== selectedCurrencyPair.to);
+    const filteredToCurrencies = currencies.filter(currency => currency !== selectedCurrencyPair.from);
     const dispatch = useAppDispatch();
-    const { exchanges } = useAppSelector((state: RootState) => state.exchange);
+    const { isCreating } = useAppSelector((state: RootState) => state.exchange);
 
     useEffect(() => {
         if (!selectedCurrencyPair.from || !selectedCurrencyPair.to) {
@@ -48,15 +44,13 @@ export const SwapSection: React.FC<{
     }, [selectedCurrencyPair.from, selectedCurrencyPair.to, onCurrencyPairSelect]);
 
     const performExchange = useCallback(async () => {
-        if (!offering) {
-            setError('No offering available. Please try again later.');
-            return;
+        if (offeringError) {
+            return <div>Error loading offering: {offeringError}</div>;
         }
 
         try {
 
             const payinPaymentDetails = (() => {
-                console.log("offering", offering);
                 switch (selectedCurrencyPair.from) {
                     case 'USD':
                         return {
@@ -135,9 +129,8 @@ export const SwapSection: React.FC<{
             }
         } catch (error) {
             console.error('Failed to create exchange:', error);
-            setError('Failed to create exchange. Please try again.');
         }
-    }, [dispatch, offering, amount, onAmountChange, selectedCurrencyPair.to]);
+    }, [dispatch, offering, amount, onAmountChange, selectedCurrencyPair.to, selectedCurrencyPair.from, offeringError]);
 
     const handleFromCurrencyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         onCurrencyPairSelect(e.target.value, selectedCurrencyPair.to);
@@ -154,14 +147,15 @@ export const SwapSection: React.FC<{
     const isExchangeValid = useCallback(() => {
 
         const enteredAmount = parseFloat(amount);
-        return selectedBalance > 0 && enteredAmount > 0 && !isCreating;
-    }, [amount, selectedBalance, isCreating]);
+        return selectedBalance > 0 && enteredAmount > 0 && !isCreating && status === 'succeeded';
+    }, [amount, selectedBalance, isCreating, status]);
 
     const CurrencySelect: React.FC<{
         value: string;
         onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
         label: string;
-    }> = ({ value, onChange, label }) => (
+        options: string[];
+    }> = ({ value, onChange, label, options }) => (
         <div className="flex flex-col w-full sm:w-2/5 mb-4 sm:mb-0">
             <label className="text-white/80 mb-2">{label}</label>
             <div className="relative">
@@ -170,7 +164,7 @@ export const SwapSection: React.FC<{
                     onChange={onChange}
                     className="w-full appearance-none bg-white/20 text-white py-3 sm:py-4 pl-12 pr-10 rounded-lg outline-none transition-colors duration-300 hover:bg-white/30 text-base sm:text-lg font-semibold"
                 >
-                    {currencies.map((currency) => (
+                    {options.map((currency) => (
                         <option key={currency} value={currency} className="bg-indigo-600 flex items-center">
                             {currency}
                         </option>
@@ -213,6 +207,7 @@ export const SwapSection: React.FC<{
                                 value={selectedCurrencyPair.from}
                                 onChange={handleFromCurrencyChange}
                                 label="From"
+                                options={filteredFromCurrencies}
                             />
                             <motion.button
                                 whileHover={{ scale: 1.1, rotate: 180 }}
@@ -226,6 +221,7 @@ export const SwapSection: React.FC<{
                                 value={selectedCurrencyPair.to}
                                 onChange={handleToCurrencyChange}
                                 label="To"
+                                options={filteredToCurrencies}
                             />
                         </div>
                         <div className="bg-white/10 p-4 sm:p-6 rounded-xl mb-6">
@@ -245,6 +241,7 @@ export const SwapSection: React.FC<{
                                 onChange={handleAmountChange}
                                 selectValue={selectedCurrencyPair.from}
                                 onReset={handleReset}
+                                selectedBalance={selectedBalance}
                             />
                         </div>
                         <motion.button
